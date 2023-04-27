@@ -341,8 +341,7 @@ const ChatBubble = styled("div")({
 });
 
 const ChatImage = styled("img")({
-	width: "100%",
-	height: "100%",
+	width: "400px",
 	objectFit: "cover",
 	borderRadius: "10px",
 });
