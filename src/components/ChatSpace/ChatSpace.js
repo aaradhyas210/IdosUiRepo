@@ -7,7 +7,9 @@ const ChatSpace = () => {
 	const drop = useRef(null);
 	const [chatHistory, setChatHistory] = useState([]);
 	const [selectedFile, setSelectedFile] = useState(null);
+	const [uploadedFile, setUploadedFile] = useState(null);
 	const [isLoading, setIsLoading] = useState(false);
+	const [messageValue, setMessageValue] = useState("");
 
 	useEffect(() => {
 		let chat = document.getElementById("chat");
@@ -47,15 +49,38 @@ const ChatSpace = () => {
 				files: [selectedFile],
 			};
 			setChatHistory((curr) => [...curr, chat]);
-			getChatResponse();
+			getResponse("upload");
 		}
 	};
 
-	const getChatResponse = async () => {
+	const SendMessage = () => {
+		if (value !== "") {
+			const chat = {
+				message: messageValue,
+				sender: "client",
+				files: [],
+			};
+			setChatHistory([...chatHistory, chat]);
+			setMessageValue("");
+			getResponse("question");
+		}
+	};
+
+	const getResponse = async (type) => {
 		setIsLoading(true);
 		let formData = new FormData();
-		formData.append("file", selectedFile);
-		fetch(`http://localhost:8080/upload`, {
+		formData.append("file", type === "upload" ? selectedFile : uploadedFile);
+
+		if (type === "question") {
+			formData.append("question", messageValue);
+		}
+
+		let url =
+			type === "upload"
+				? "http://localhost:5000/upload"
+				: "https://generativeaidev.azurewebsites.net/fileupload";
+
+		fetch(url, {
 			method: "POST",
 			body: formData,
 		})
@@ -74,6 +99,7 @@ const ChatSpace = () => {
 					files: [],
 				};
 				setChatHistory((curr) => [...curr, chat]);
+				setUploadedFile(selectedFile);
 				setSelectedFile(null);
 				setIsLoading(false);
 			})
