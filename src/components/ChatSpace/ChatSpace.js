@@ -1,7 +1,15 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Button, CircularProgress, styled } from "@mui/material";
+import {
+	Button,
+	CircularProgress,
+	IconButton,
+	InputAdornment,
+	TextField,
+	styled,
+} from "@mui/material";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import DescriptionIcon from "@mui/icons-material/Description";
+import SendIcon from "@mui/icons-material/Send";
 
 const ChatSpace = () => {
 	const drop = useRef(null);
@@ -53,8 +61,18 @@ const ChatSpace = () => {
 		}
 	};
 
+	const OnMessageInputChange = (e) => {
+		setMessageValue(e.target.value);
+	};
+
+	const CheckSendMessage = (e) => {
+		if (e.key === "Enter" && !e.shiftKey) {
+			SendMessage();
+		}
+	};
+
 	const SendMessage = () => {
-		if (value !== "") {
+		if (messageValue !== "") {
 			const chat = {
 				message: messageValue,
 				sender: "client",
@@ -69,9 +87,13 @@ const ChatSpace = () => {
 	const getResponse = async (type) => {
 		setIsLoading(true);
 		let formData = new FormData();
-		formData.append("file", type === "upload" ? selectedFile : uploadedFile);
-
-		if (type === "question") {
+		if (type === "upload" && selectedFile) {
+			formData.append("file", selectedFile);
+		}
+		if (type === "question" && uploadedFile) {
+			formData.append("file", uploadedFile);
+		}
+		if (type === "question" && messageValue !== "") {
 			formData.append("question", messageValue);
 		}
 
@@ -94,9 +116,9 @@ const ChatSpace = () => {
 			})
 			.then((data) => {
 				const chat = {
-					message: data,
+					message: type === "upload" ? "" : data.answer,
 					sender: "bot",
-					files: [],
+					files: type === "upload" ? [data] : [],
 				};
 				setChatHistory((curr) => [...curr, chat]);
 				setUploadedFile(selectedFile);
@@ -272,6 +294,22 @@ const ChatSpace = () => {
 						)}
 					</UploadButtonContainer>
 				)}
+				<ChatInput
+					placeholder="Type your message here..."
+					onChange={OnMessageInputChange}
+					onKeyUp={CheckSendMessage}
+					value={messageValue}
+					// multiline
+					InputProps={{
+						endAdornment: (
+							<InputAdornment position="end">
+								<IconButton onClick={SendMessage}>
+									<SendIcon />
+								</IconButton>
+							</InputAdornment>
+						),
+					}}
+				/>
 			</Wrapper>
 		</PageContainer>
 	);
@@ -494,6 +532,29 @@ const UploadButton = styled(Button)({
 
 const HiddenInput = styled("input")({
 	display: "none",
+});
+
+const ChatInput = styled(TextField)({
+	resize: "none",
+	marginBottom: "10px",
+	width: "80%",
+	borderRadius: "10px",
+	fontFamily: "inherit",
+	border: "none",
+	backgroundColor: "rgba(255, 255, 255, 0.85)",
+	"& .MuiOutlinedInput-root": {
+		"& fieldset": {
+			borderColor: "#FFFFFF",
+		},
+		"&:hover fieldset": {
+			borderColor: "#FFFFFF",
+		},
+	},
+	"& .MuiOutlinedInput-root.Mui-focused": {
+		"& > fieldset": {
+			borderColor: "#FFFFFF",
+		},
+	},
 });
 
 export default ChatSpace;
